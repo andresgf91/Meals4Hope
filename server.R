@@ -54,12 +54,53 @@ shinyServer(function(input, output) {
                  icon=icon("hands-helping"))
     })
     
-    output$tipo_proyecto <- renderText({
+    output$tipo_proyecto <- renderTable({
                      
         temp.data <- temp.project()                  
-        temp.data$Q6
+        
+        df <- strsplit(temp.data$Q6, split = ",") %>% as.data.frame()
+        names(df) <- "Actividades Principales"
+        df
+        
     }
     )
+    
+    output$coordinadora <- renderValueBox({
+      
+      temp.data <- temp.project()
+      
+      nombre <- temp.data$Q9_1
+      apellido <- temp.data$Q9_2
+      
+      valueBox(value=paste(nombre,apellido),
+               subtitle =  HTML("<b>Coordinador(a)</b> <button id=\"show_contacto_coordinadora\" type=\"button\" class=\"btn btn-default action-button\">Ver Contacto</button>"))
+      
+    })
+    
+    
+    
+    observeEvent(input$show_contacto_coordinadora, {
+      temp.data <- temp.project()
+      isolate(temp.data <- temp.data %>% select(Q9_1,Q9_2,Q9_3,Q9_4) %>%
+                mutate(Q9_3 = paste0("0",as.character(as.numeric(Q9_3)))) %>%
+                mutate(Q9_3 = paste0("(",
+                                     stri_sub(Q9_3,1,4),
+                                     ") ",
+                                     stri_sub(Q9_3,5,7),
+                                     "-",
+                                     stri_sub(Q9_3,8))) %>% 
+                rename("Nombre"=Q9_1,
+                       "Apellido"=Q9_2,
+                       "Telefono"=Q9_3,
+                       "Email"=Q9_4))
+      
+      showModal(modalDialog(size = 'm',
+                            title = "Contacto del coordinador(a)",
+                            renderTable(temp.data),
+                            easyClose = TRUE))
+      
+    })
+    
     
     
 })

@@ -18,8 +18,7 @@ library(streamgraph)
 library(DT)
 
 
-setwd("~/Meals4Hope/R_code/Meals_4_Hope")
-source('~/Meals4Hope/R_code/Meals_4_Hope/data_processing_meals4hope.R')
+source('data_processing_meals4hope.R')
 
 
 
@@ -61,7 +60,8 @@ tab.2 <-  tabItem(tabName = "fichas_proyecto",
                       infoBoxOutput("parroquia", width = 3),
                       valueBoxOutput("fecha_inicio",width = 2),
                       valueBoxOutput("n_voluntarios",width = 2),
-                      textOutput("tipo_proyecto")
+                      tableOutput("tipo_proyecto"),
+                      valueBoxOutput("coordinadora",width = 4)
                       
                     )
                   ))
