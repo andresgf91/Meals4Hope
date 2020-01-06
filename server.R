@@ -8,9 +8,30 @@
 #
 
 library(shiny)
+library(kableExtra)
 
 # Define server logic required to draw a histogram
 shinyServer(function(input, output) {
+  
+  output$n_proyectos <- renderValueBox({
+    
+   valueBox(value = nrow(data),subtitle = "Numero de Proyectos")
+    
+    
+  })
+  
+  output$n_ninos <- renderValueBox({
+    
+    vector <- data$Q10 %>% as.numeric()
+    vector[which(is.na(vector))] <- 0
+    
+    
+    valueBox(value = sum(vector),subtitle = "Ninos/Ninas Beneficiadas")
+    
+  })
+  
+  
+#tab.1 OVERVIEW --------------------------
     temp.project <- reactive({
         data %>% filter(Q1 == input$select_project)
     })
@@ -54,16 +75,18 @@ shinyServer(function(input, output) {
                  icon=icon("hands-helping"))
     })
     
-    output$tipo_proyecto <- renderTable({
+    output$tipo_proyecto <-  function(){
                      
         temp.data <- temp.project()                  
         
         df <- strsplit(temp.data$Q6, split = ",") %>% as.data.frame()
         names(df) <- "Actividades Principales"
-        df
+        
+        df %>% knitr::kable("html") %>%
+          kable_styling("basic", full_width = F)
         
     }
-    )
+    
     
     output$coordinadora <- renderValueBox({
       
@@ -76,7 +99,6 @@ shinyServer(function(input, output) {
                subtitle =  HTML("<b>Coordinador(a)</b> <button id=\"show_contacto_coordinadora\" type=\"button\" class=\"btn btn-default action-button\">Ver Contacto</button>"))
       
     })
-    
     
     
     observeEvent(input$show_contacto_coordinadora, {
@@ -102,5 +124,55 @@ shinyServer(function(input, output) {
     })
     
     
+    output$n_beneficiarios_kids <- renderValueBox({
+      temp.data <- temp.project()
+      valueBox(value = as.numeric(temp.data$Q10),
+               subtitle = "Número de Ninos(as)",
+               icon=icon("child"))
+    })
     
+    
+    output$n_beneficiarios_embarazadas <- renderValueBox({
+      temp.data <- temp.project()
+      
+      valor <- ifelse(is.na(as.numeric(temp.data$Q22_1_1)),
+                      "No Aplica",
+                      as.numeric(temp.data$Q22_1_1))
+      
+      valueBox(value = valor,
+               subtitle = "Número de mujeres embarazadas",
+               icon=icon("child"))
+    })
+    
+    output$n_beneficiarios_lactantes <- renderValueBox({
+      temp.data <- temp.project()
+      
+      
+      valor <- ifelse(is.na(as.numeric(temp.data$Q22_2_1)),
+                      "No Aplica",
+                      as.numeric(temp.data$Q22_2_1))
+      
+      
+      valueBox(value = valor,
+               subtitle = "Número de mujeres lactantes",
+               icon=icon("child"))
+    })
+    
+    output$vene_map_proyectos <- renderLeaflet({
+      
+      
+      leaflet(map_df) %>%
+        addProviderTiles(
+          providers$OpenStreetMap.Mapnik,
+          options = providerTileOptions(noWrap = TRUE)) %>%
+        addCircleMarkers(lng = ~lon, lat = ~lat,
+                         popup = ~n_proyectos,radius = ~round(ifelse(n_proyectos>1,
+                                                                     (log(n_proyectos)*10),
+                                                                     (log(2)*12/2))),
+                         label =  ~paste0("[",nombre_estado,"] ",
+                                          "Numero de proyectos: ",
+                                          n_proyectos))
 })
+
+})    
+    

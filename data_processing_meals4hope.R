@@ -32,3 +32,63 @@ simpleCap <- function(x) {
 }
 
 data$Q1 <- sapply(data$Q1, simpleCap)
+
+library(plotly)
+library(sf)
+library(sp)
+library(maptools)
+library(rgdal)
+library(plotly)
+require(sf)
+
+
+poly_ob <- rgdal::readOGR(dsn = "data/Maps", layer = "Estados_Venezuela")
+
+poly_df <- fortify(model = poly_ob,data = poly_ob@data$ESTADO)
+
+poly_df$id <- as.numeric(poly_df$id)
+
+
+estado_id <- poly_ob@data
+estado_id$id <- row.names(estado_id) %>% as.numeric()
+estado_id <- estado_id %>% select(-ID)
+
+poly_df <- left_join(poly_df,estado_id,by=c("id"="id"))
+
+
+estado_coordy <- poly_df %>% group_by(ESTADO) %>%
+  summarise(lat=mean(as.numeric(lat)),
+            lon=mean(as.numeric(long)))
+
+
+
+estado_coordy$nombre_estado <- c("Amazonas",
+                                 "Anzoategui",
+                                 "Apure",
+                                 "Aragua",
+                                 "Barinas",
+                                 "Bolivar",
+                                 "Carabobo",
+                                 "Cojedes",
+                                 "Delta Amacuro",
+                                 "Distrito Capital",
+                                 "Falcon",
+                                 "Guarico",
+                                 "Lara",
+                                 "Merida",
+                                 "Miranda",
+                                 "Monagas",
+                                 "Nueva Esparta",
+                                 "Portuguesa",
+                                 "Sucre",
+                                 "Tachira",
+                                 "Trujillo",
+                                 "Vargas",
+                                 "Yaracuy",
+                                 "Zona en Reclamacion",
+                                 "Zulia")
+
+n_pro_df <- data %>% dplyr::group_by(Q2_1) %>% summarise(n_proyectos=n())
+
+map_df <- left_join(estado_coordy,n_pro_df,by=c("nombre_estado"="Q2_1")) %>%
+  filter(n_proyectos>0)
