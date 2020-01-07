@@ -16,6 +16,7 @@ library(shinyBS)
 library(plotly)
 library(streamgraph)
 library(DT)
+library(leaflet)
 
 
 source('data_processing_meals4hope.R')
